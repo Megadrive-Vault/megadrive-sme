@@ -6,4 +6,5 @@ sme/lib/
 *.suo
 compiler/tmp/
 compiler/bin/
-
+game/data/data.c
+game/data/data.h
