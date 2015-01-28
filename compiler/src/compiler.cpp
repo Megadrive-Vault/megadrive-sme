@@ -18,7 +18,7 @@ FILE* data_file_c;
 vector<string> frames;
 vector<bool> null_frames;
 
-void compile_bitmap(string root_path, string bitmap_path, bool video)
+void compile_bitmap(string root_path, string bitmap_path)
 {
     string bitmap_name = bitmap_path.substr(0, bitmap_path.size()-4);
     printf("compiling %s...\n", bitmap_name.c_str());
@@ -57,21 +57,11 @@ void compile_bitmap(string root_path, string bitmap_path, bool video)
     
     if (bitmap_depth==0)
         bitmap_depth = 16;
-
-
-    bool incorrect_depth = false;
     if (bitmap_depth<3 || bitmap_depth>16 || bitmap_bpp!=4)
     {
-        incorrect_depth = true;
-        bitmap_depth = 16;
-        bitmap_bpp = 4;
-
-        if (!video)
-        {
-            printf("INCORRECT DEPTH\n");
-            fclose(bitmap);
-            return;
-        }
+        printf("INCORRECT DEPTH\n");
+        fclose(bitmap);
+        return;
     }
 
     int packed_width = (bitmap_width*bitmap_bpp)/16;
@@ -85,115 +75,87 @@ void compile_bitmap(string root_path, string bitmap_path, bool video)
     
     bitmap_width = packed_width;
 
-    if (video)
+    fprintf(data_file_h, "    extern smeBitmap %s;\n", bitmap_name.c_str());
+    
+    FILE* packed_input = fopen((root_path+"tmp.in").c_str(), "wb");
     {
-        frames.push_back(bitmap_name);
-    }
-    else
-    {
-        fprintf(data_file_h, "    extern smeBitmap %s;\n", bitmap_name.c_str());
-    }
+        // palette
 
-    if (!incorrect_depth)
-    {
-        FILE* packed_input = fopen((root_path+"tmp.in").c_str(), "wb");
+        fseek(bitmap, dib_size+14, SEEK_SET);
+        
+        for (int c=0 ; c<bitmap_depth ; ++c)
         {
-            // palette
+            unsigned char b;
+            fread(&b, 1, 1, bitmap);
+            unsigned char g;
+            fread(&g, 1, 1, bitmap);
+            unsigned char r;
+            fread(&r, 1, 1, bitmap);
+            unsigned char a;
+            fread(&a, 1, 1, bitmap);
+        
+            unsigned short v = ((r*15/255)<<8)+((g*15/255)<<12)+((b*15/255)<<0);
+            fwrite(&v, 2, 1, packed_input);
+        }
 
-            fseek(bitmap, dib_size+14, SEEK_SET);
-            
-            for (int c=0 ; c<bitmap_depth ; ++c)
+        // read image data
+
+        unsigned short* image = (unsigned short*)malloc(bitmap_width*bitmap_height*2);
+
+        for (int y=0 ; y<bitmap_height ; ++y)
+        {
+            fseek(bitmap, bitmap_offset+(bitmap_height-y-1)*row_size, SEEK_SET);
+            for (int x=0 ; x<bitmap_width ; ++x)
             {
-                unsigned char b;
-                fread(&b, 1, 1, bitmap);
-                unsigned char g;
-                fread(&g, 1, 1, bitmap);
-                unsigned char r;
-                fread(&r, 1, 1, bitmap);
-                unsigned char a;
-                fread(&a, 1, 1, bitmap);
-            
-                unsigned short v = ((r*15/255)<<8)+((g*15/255)<<12)+((b*15/255)<<0);
-                fwrite(&v, 2, 1, packed_input);
+                fread(image+y*bitmap_width+x, 2, 1, bitmap);
+                ((unsigned char*)(image+y*bitmap_width+x))[0] += 1+(1<<4);
+                ((unsigned char*)(image+y*bitmap_width+x))[1] += 1+(1<<4);
             }
-
-            // read image data
-
-            unsigned short* image = (unsigned short*)malloc(bitmap_width*bitmap_height*2);
-
-            for (int y=0 ; y<bitmap_height ; ++y)
-            {
-                fseek(bitmap, bitmap_offset+(bitmap_height-y-1)*row_size, SEEK_SET);
-                for (int x=0 ; x<bitmap_width ; ++x)
-                {
-                    fread(image+y*bitmap_width+x, 2, 1, bitmap);
-                    ((unsigned char*)(image+y*bitmap_width+x))[0] += 1+(1<<4);
-                    ((unsigned char*)(image+y*bitmap_width+x))[1] += 1+(1<<4);
-                }
-            }
-
-            fwrite(image, 2, bitmap_width*bitmap_height, packed_input);
-            free(image);
         }
-        fclose(packed_input);
-        
-        // compress
 
-        packed_input = fopen((root_path+"tmp.in").c_str(), "rb");
-        FILE* packed_output = fopen((root_path+"tmp.out").c_str(), "wb");
-        compress(packed_input, packed_output, FORMAT_SLZ16);
-        fclose(packed_output);
-        fclose(packed_input);
-        
-        packed_output = fopen((root_path+"tmp.out").c_str(), "rb");
-        fseek(packed_output, 0, SEEK_END);
-        long size = ftell(packed_output);
-        unsigned char* packed = (unsigned char*)malloc(size);
-        fseek(packed_output, 0, SEEK_SET);
-        fread(packed, 1, size, packed_output);
-        fclose(packed_output);
-        
-        // write
-
-        if (video)
-        {
-            fprintf(data_file_c, "const u8 %s[] = {", bitmap_name.c_str());
-        }
-        else
-        {
-            fprintf(data_file_c, "const u8 %s_packed[] = {", bitmap_name.c_str());
-        }
-        
-        for (int i=0 ; i<size ; ++i)
-        {
-            fprintf(data_file_c, "%u", packed[i]);
-            if (i<size-1)
-                fprintf(data_file_c, ",");
-        }
-        free(packed);
-
-        fprintf(data_file_c, "};\n");
-
-        null_frames.push_back(false);
+        fwrite(image, 2, bitmap_width*bitmap_height, packed_input);
+        free(image);
     }
-    else
+    fclose(packed_input);
+    
+    // compress
+
+    packed_input = fopen((root_path+"tmp.in").c_str(), "rb");
+    FILE* packed_output = fopen((root_path+"tmp.out").c_str(), "wb");
+    compress(packed_input, packed_output, FORMAT_SLZ16);
+    fclose(packed_output);
+    fclose(packed_input);
+    
+    packed_output = fopen((root_path+"tmp.out").c_str(), "rb");
+    fseek(packed_output, 0, SEEK_END);
+    long size = ftell(packed_output);
+    unsigned char* packed = (unsigned char*)malloc(size);
+    fseek(packed_output, 0, SEEK_SET);
+    fread(packed, 1, size, packed_output);
+    fclose(packed_output);
+    
+    // write
+    fprintf(data_file_c, "const u8 %s_packed[] = {", bitmap_name.c_str());
+    
+    for (int i=0 ; i<size ; ++i)
     {
-        null_frames.push_back(true);
+        fprintf(data_file_c, "%u", packed[i]);
+        if (i<size-1)
+            fprintf(data_file_c, ",");
     }
+    free(packed);
 
-    if (!video)
-    {   
-        fprintf(data_file_c, "smeBitmap %s = {\n", bitmap_name.c_str());
-        fprintf(data_file_c, "    %i,\n", bitmap_width);
-        fprintf(data_file_c, "    %i,\n", bitmap_height);
-        fprintf(data_file_c, "    %i,\n", bitmap_depth);
-        fprintf(data_file_c, "    NULL,\n");
-        fprintf(data_file_c, "    NULL,\n");
-        fprintf(data_file_c, "    NULL,\n");
-        fprintf(data_file_c, "    %s_packed\n", bitmap_name.c_str());
-        fprintf(data_file_c, "};\n");
-    }
+    fprintf(data_file_c, "};\n");
 
+    fprintf(data_file_c, "smeBitmap %s = {\n", bitmap_name.c_str());
+    fprintf(data_file_c, "    %i,\n", bitmap_width);
+    fprintf(data_file_c, "    %i,\n", bitmap_height);
+    fprintf(data_file_c, "    %i,\n", bitmap_depth);
+    fprintf(data_file_c, "    NULL,\n");
+    fprintf(data_file_c, "    NULL,\n");
+    fprintf(data_file_c, "    NULL,\n");
+    fprintf(data_file_c, "    %s_packed\n", bitmap_name.c_str());
+    fprintf(data_file_c, "};\n");
     fclose(bitmap);
 }
 
@@ -349,6 +311,7 @@ int main(int argc, char* argv[])
     data_file_c = fopen((root_path+"data.c").c_str(), "wt");
     fprintf(data_file_c, "#include \"data.h\"\n\n");
 
+    // Bitmaps
     WIN32_FIND_DATA find_data;
     HANDLE handle = FindFirstFile((root_path+"*.bmp").c_str(), &find_data);
     if (handle!=INVALID_HANDLE_VALUE)
@@ -356,45 +319,13 @@ int main(int argc, char* argv[])
         do
         {
             if (!(find_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
-                compile_bitmap(root_path, find_data.cFileName, false);
+                compile_bitmap(root_path, find_data.cFileName);
         }
         while (FindNextFile(handle, &find_data)!=0);
-    }
-    FindClose(handle);
-
-    // Video
-
-    handle = FindFirstFile((root_path+"video/*.bmp").c_str(), &find_data);
-    if (handle!=INVALID_HANDLE_VALUE)
-    {
-        fprintf(data_file_h, "    extern const int FrameCount;\n");
-        fprintf(data_file_h, "    extern const u8* Frames[];\n");    
-    
-        do
-        {
-            if (!(find_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
-                compile_bitmap(root_path+"video/", find_data.cFileName, true);
-        }
-        while (FindNextFile(handle, &find_data)!=0);
-   
-        fprintf(data_file_c, "const u8* Frames[] = {\n");
-        for (int i=0 ; i<frames.size() ; ++i)
-        {
-            if (i>0)
-                fprintf(data_file_c, ",\n");    
-
-            if (null_frames[i]) fprintf(data_file_c, "NULL");
-            else fprintf(data_file_c, "%s", frames[i].c_str());
-        }
-        fprintf(data_file_c, "\n};\n");
-        
-        fprintf(data_file_c, "const int FrameCount = %d;\n", frames.size());
-        fclose(data_file_c);
     }
     FindClose(handle);
 
     // Maps
-
     handle = FindFirstFile((root_path+"*.csv").c_str(), &find_data);
     if (handle!=INVALID_HANDLE_VALUE)
     {
