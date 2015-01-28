@@ -1,0 +1,9 @@
+out/
+*.o
+sme/lib/
+*.vcproj.*.*.user
+*.ncb
+*.suo
+compiler/tmp/
+compiler/bin/
+
