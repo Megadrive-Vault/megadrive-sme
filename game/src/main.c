@@ -5,107 +5,10 @@
 int VIEWPORT_WIDTH;
 int VIEWPORT_HEIGHT;
 int VIEWPORT_BORDER;
-int PLAN_WIDTH;
-int PLAN_HEIGHT;
-int MAP_WIDTH;
-int MAP_HEIGHT;
 
 int ANIM_ANGLES = 12;
 
-Map Plan_a;
-Map Plan_b;
-
 Sprite sprites[2];
-
-void slice(int* ms, int* ps, int* count, int mx, int px, int s, int m_max, int p_max)
-{
-    // check breaks with each maximum
-    int breaks[3];
-    int breaks_count = 0;
-    
-    {
-        // check map maximum
-        int out = mx+s-m_max;
-        if (out>0)
-        {
-            breaks[0] = s-out;
-            ++breaks_count;
-        }
-    
-        // check plan maximum
-        out = px+s-p_max;
-        if (out>0)
-        {
-            int b = s-out;
-            if (breaks_count==0 || breaks[0]<b)
-            {
-                breaks[breaks_count] = b;
-                ++breaks_count;
-            }
-            else if (breaks[0]!=b)
-            {
-                int t = breaks[0];
-                breaks[0] = b;
-                breaks[1] = t;
-                ++breaks_count;
-            }        
-        }
-    
-        // add final break if required
-        if (breaks_count==0 || breaks[breaks_count-1]!=s)
-        {
-            breaks[breaks_count] = s;
-            ++breaks_count;
-        }
-    }
-    
-    // create drawing points
-    int i;
-    *count = breaks_count*2;
-    
-    ms[0] = mx;
-    ps[0] = px;
-    ms[1] = breaks[0];
-    ps[1] = breaks[0];
-    
-    for (i=1 ; i<breaks_count ; ++i)
-    {
-        ms[i*2] = smeMOD(mx+breaks[i-1], m_max);
-        ps[i*2] = smeMOD(px+breaks[i-1], p_max);
-        ms[i*2+1] = breaks[i]-breaks[i-1];
-        ps[i*2+1] = breaks[i]-breaks[i-1];
-    }
-}
-
-void update(int x, int y, int w, int h)
-{
-    int mx = smeMOD(x, MAP_WIDTH);
-    int my = smeMOD(y, MAP_HEIGHT);
-    int px = smeMOD(x, PLAN_WIDTH);
-    int py = smeMOD(y, PLAN_HEIGHT);
-    
-    int mxs[6];
-    int pxs[6];    
-    int nx = 0;
-    slice(mxs, pxs, &nx, mx, px, w, MAP_WIDTH, PLAN_WIDTH);
-    
-    int mys[6];
-    int pys[6];    
-    int ny = 0;
-    slice(mys, pys, &ny, my, py, h, MAP_HEIGHT, PLAN_HEIGHT);
-    
-    int i, j;
-    for (j=0 ; j<ny ; j+=2)
-    {
-        int hs = pys[j+1];
-        for (i=0 ; i<nx ; i+=2)
-        {
-            int ws = pxs[i+1];
-            VDP_setMapEx(VDP_PLAN_A, &Plan_a, TILE_ATTR(0, 0, 0, 0), pxs[i], pys[j], mxs[i], mys[j], ws, hs); 
-            VDP_setMapEx(VDP_PLAN_B, &Plan_b, TILE_ATTR(0, 1, 0, 0), pxs[i], pys[j], mxs[i], mys[j], ws, hs); 
-        }
-    }
-}
 
 float position_x = 0.0f;
 float position_y = 0.0f;
@@ -121,55 +24,39 @@ void vblank()
     VDP_setVerticalScroll(PLAN_B, (int)(camera_position_y-screenHeight/2));      
 }
 
-float cos(float a)
-{
-    int v = (int)(a*512.0f/PI);
-    if (v<0) v += 1024;
-    return ((int)cosFix32(v))/1024.0f;
-}
-
-float sin(float a)
-{
-    int v = (int)(a*512.0f/PI);
-    if (v<0) v += 1024;
-    return ((int)sinFix32(v))/1024.0f;
-}
-
 int main(u16 hard)
 {
-    sme_Init(hard);
+    sme_Initialize(hard);
     
     VIEWPORT_BORDER = 2;
     VIEWPORT_WIDTH = screenWidth/8+VIEWPORT_BORDER*2;
     VIEWPORT_HEIGHT = screenHeight/8+VIEWPORT_BORDER*2;
-    PLAN_WIDTH = VDP_getPlanWidth();
-    PLAN_HEIGHT = VDP_getPlanHeight();
-    MAP_WIDTH = 252;
-    MAP_HEIGHT = 252;
+    //MAP_WIDTH = 252;
+    //MAP_HEIGHT = 252;
     
     SPR_init(256);
     SPR_initSprite(&sprites[0], &truck, 0, 0, TILE_ATTR(PAL2, 0, FALSE, FALSE));
     VDP_setPalette(1, truck.palette->data);
     
-    VDP_setPalette(0, map_plan_a_palette);
-    VDP_loadTileSet(&map_plan_a_tiles, TILE_USERINDEX, 0);
+    //VDP_setPalette(0, map_plan_a_palette);
+    //VDP_loadTileSet(&map_plan_a_tiles, TILE_USERINDEX, 0);
     
-    Plan_a.compression = 0;
-    Plan_a.w = MAP_WIDTH;
-    Plan_a.h = MAP_HEIGHT;
-    Plan_a.tilemap = map_plan_a;
+    // Plan_a.compression = 0;
+    // Plan_a.w = MAP_WIDTH;
+    // Plan_a.h = MAP_HEIGHT;
+    // Plan_a.tilemap = map_plan_a;
     
-    Plan_b.compression = 0;
-    Plan_b.w = MAP_WIDTH;
-    Plan_b.h = MAP_HEIGHT;
-    Plan_b.tilemap = map_plan_b;
+    // Plan_b.compression = 0;
+    // Plan_b.w = MAP_WIDTH;
+    // Plan_b.h = MAP_HEIGHT;
+    // Plan_b.tilemap = map_plan_b;
     
     VDP_setScrollingMode(HSCROLL_PLANE, VSCROLL_PLANE);
     
     camera_position_x = position_x;
     camera_position_y = position_y;
     
-    update((int)(camera_position_x/8-screenWidth/16-VIEWPORT_BORDER), (int)(camera_position_y/8-screenHeight/16-VIEWPORT_BORDER), VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
+    //update((int)(camera_position_x/8-screenWidth/16-VIEWPORT_BORDER), (int)(camera_position_y/8-screenHeight/16-VIEWPORT_BORDER), VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
     
     SYS_setVIntCallback(vblank);
     
@@ -220,7 +107,7 @@ int main(u16 hard)
         int px = place_x-screenWidth/16-VIEWPORT_BORDER;
         int py = place_y-screenHeight/16-VIEWPORT_BORDER;
         
-        if (place_x>old_place_x)
+        /*if (place_x>old_place_x)
             update(px+VIEWPORT_WIDTH-1, py, VIEWPORT_BORDER, VIEWPORT_HEIGHT);
         else if (place_x<old_place_x)
             update(px, py, VIEWPORT_BORDER, VIEWPORT_HEIGHT);
@@ -228,9 +115,9 @@ int main(u16 hard)
         if (place_y>old_place_y)
             update(px, py+VIEWPORT_HEIGHT-1, VIEWPORT_WIDTH, VIEWPORT_BORDER);
         else if (place_y<old_place_y)
-            update(px, py, VIEWPORT_WIDTH, VIEWPORT_BORDER);
+            update(px, py, VIEWPORT_WIDTH, VIEWPORT_BORDER);*/
     }
     
-    sme_Exit();    
+    sme_Finalize();    
     return 0;
 }

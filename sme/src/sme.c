@@ -1,19 +1,17 @@
 #include "sme.h"
 
-void sme_Init(u16 hard)
+void sme_Initialize(u16 hard)
 {
     if (hard==0)
     {
         // handle reset
     }
     
-    VDP_init();
-    VDP_setHInterrupt(0);
-    VDP_setHilightShadow(0);
-    VDP_setScreenWidth320(); 
+    smeVDP_Initialize();
 }
 
-void sme_Exit()
+void sme_Finalize()
 {
+    smeVDP_Finalize();
 }
 

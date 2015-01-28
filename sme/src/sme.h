@@ -1,12 +1,11 @@
 #ifndef _SME_H_
 #define _SME_H_
 
+#include "sme_maths.h"
+#include "sme_vdp.h"
 #include "sme_sound.h"
-#include "sme_screen.h"
 
-void sme_Init(u16 hard);
-void sme_Exit();
-
-#define smeMOD(a, b)  ((a) % (b) + (b)) % (b)
+void sme_Initialize(u16 hard);
+void sme_Finalize();
 
 #endif

@@ -17,9 +17,9 @@ typedef struct
 
 extern u8* DecompressSlz(u8* output, const u8* input);
 
-void smeBITMAP_acquire(smeBitmap* bitmap);
-void smeBITMAP_acquire_buffer(smeBitmap* bitmap, u8* buffer);
-void smeBITMAP_release(smeBitmap* bitmap);
-void smeBITMAP_release_buffer(smeBitmap* bitmap);
+void smeBITMAP_Acquire(smeBitmap* bitmap);
+void smeBITMAP_Release(smeBitmap* bitmap);
+void smeBITMAP_AcquireBuffer(smeBitmap* bitmap, u8* buffer);
+void smeBITMAP_ReleaseBuffer(smeBitmap* bitmap);
 
 #endif
