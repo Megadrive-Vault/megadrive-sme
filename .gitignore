@@ -8,3 +8,4 @@ compiler/tmp/
 compiler/bin/
 game/data/data.c
 game/data/data.h
+game/res/resources.h

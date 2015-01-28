@@ -1,14 +1,6 @@
 #include "sme.h"
 #include "resources.h"
-#include "scene_barrel.h"
-#include "scene_cube.h"
-#include "scene_island.h"
-#include "scene_test.h"
-#include "scene_bmp.h"
-
 #include "data.h"
-
-#define MOD(a, b)  ((a) % (b) + (b)) % (b)
 
 int VIEWPORT_WIDTH;
 int VIEWPORT_HEIGHT;
@@ -78,8 +70,8 @@ void slice(int* ms, int* ps, int* count, int mx, int px, int s, int m_max, int p
     
     for (i=1 ; i<breaks_count ; ++i)
     {
-        ms[i*2] = MOD(mx+breaks[i-1], m_max);
-        ps[i*2] = MOD(px+breaks[i-1], p_max);
+        ms[i*2] = smeMOD(mx+breaks[i-1], m_max);
+        ps[i*2] = smeMOD(px+breaks[i-1], p_max);
         ms[i*2+1] = breaks[i]-breaks[i-1];
         ps[i*2+1] = breaks[i]-breaks[i-1];
     }
@@ -87,10 +79,10 @@ void slice(int* ms, int* ps, int* count, int mx, int px, int s, int m_max, int p
 
 void update(int x, int y, int w, int h)
 {
-    int mx = MOD(x, MAP_WIDTH);
-    int my = MOD(y, MAP_HEIGHT);
-    int px = MOD(x, PLAN_WIDTH);
-    int py = MOD(y, PLAN_HEIGHT);
+    int mx = smeMOD(x, MAP_WIDTH);
+    int my = smeMOD(y, MAP_HEIGHT);
+    int px = smeMOD(x, PLAN_WIDTH);
+    int py = smeMOD(y, PLAN_HEIGHT);
     
     int mxs[6];
     int pxs[6];    
@@ -146,7 +138,6 @@ float sin(float a)
 int main(u16 hard)
 {
     sme_Init(hard);
-    SND_startPlay_PCM(music, sizeof(music), SOUND_RATE_16000, SOUND_PAN_CENTER, 1);    
     
     VIEWPORT_BORDER = 2;
     VIEWPORT_WIDTH = screenWidth/8+VIEWPORT_BORDER*2;
@@ -157,8 +148,8 @@ int main(u16 hard)
     MAP_HEIGHT = 252;
     
     SPR_init(256);
-    SPR_initSprite(&sprites[0], &camion, 0, 0, TILE_ATTR(PAL2, 0, FALSE, FALSE));
-    VDP_setPalette(1, camion.palette->data);
+    SPR_initSprite(&sprites[0], &truck, 0, 0, TILE_ATTR(PAL2, 0, FALSE, FALSE));
+    VDP_setPalette(1, truck.palette->data);
     
     VDP_setPalette(0, map_plan_a_palette);
     VDP_loadTileSet(&map_plan_a_tiles, TILE_USERINDEX, 0);
@@ -197,7 +188,7 @@ int main(u16 hard)
         float vec_y = -cos(roll)*speed;
         
         
-        /*int censor = map_plan_a[MOD((int)((position_y+vec_y)/8.0f), MAP_HEIGHT)*MAP_WIDTH+MOD((int)((position_x+vec_x)/8.0f), MAP_WIDTH)];
+        /*int censor = map_plan_a[smeMOD((int)((position_y+vec_y)/8.0f), MAP_HEIGHT)*MAP_WIDTH+smeMOD((int)((position_x+vec_x)/8.0f), MAP_WIDTH)];
         if (censor==0)
         {
             vec_x = 0.0f;

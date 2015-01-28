@@ -3,7 +3,7 @@
 set GAME_PATH=%CD:\=/%
 cd ..
 cd sgdk
-rem call build.bat
+call build.bat
 set CUR_CD=%CD:\=/%
 set GDK=%CUR_CD%
 set GDK_WIN=%CUR_CD%
