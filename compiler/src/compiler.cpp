@@ -268,7 +268,7 @@ void compile_tiles(map<int, int>& bindings, string root_path, string tiles_path)
     }
     fclose(bitmap);
 }
-
+/*
 void compile_map(string root_path, string map_path)
 {
     string map_name = map_path.substr(0, map_path.size()-4);
@@ -296,6 +296,15 @@ void compile_map(string root_path, string map_path)
     }
     fclose(map);
     fprintf(data_file_c, "0};\n\n");
+}
+*/
+
+void compile_map(string root_path, string map_path)
+{
+    string map_name = map_path.substr(0, map_path.size()-4);
+    printf("compiling map %s...\n", map_name.c_str());
+
+    // TODO
 }
 
 int main(int argc, char* argv[])
