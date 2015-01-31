@@ -56,7 +56,7 @@ void smeMAP_Update(smeMap* map, int x, int y, int w, int h)
         {
             int ws = pxs[i+1];
             VDP_setMapEx(VDP_PLAN_A, map->PlaneA->Data, TILE_ATTR(0, 0, 0, 0), pxs[i], pys[j], mxs[i], mys[j], ws, hs); 
-            VDP_setMapEx(VDP_PLAN_B, map->PlaneB->Data, TILE_ATTR(0, 1, 0, 0), pxs[i], pys[j], mxs[i], mys[j], ws, hs); 
+            VDP_setMapEx(VDP_PLAN_B, map->PlaneB->Data, TILE_ATTR(1, 1, 0, 0), pxs[i], pys[j], mxs[i], mys[j], ws, hs); 
         }
     }
 }

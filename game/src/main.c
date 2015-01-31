@@ -10,8 +10,8 @@ int ANIM_ANGLES = 12;
 
 Sprite sprites[2];
 
-float position_x = 0.0f;
-float position_y = 0.0f;
+float position_x = 800.0f;
+float position_y = 800.0f;
 float roll = 0.0f;
 float camera_position_x = 0.0f;
 float camera_position_y = 0.0f;

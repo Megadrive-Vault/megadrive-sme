@@ -159,9 +159,11 @@ void compile_bitmap(string root_path, string bitmap_path)
     fclose(bitmap);
 }
 
-void compile_tiles(map<int, int>& bindings, string root_path, string tiles_path, bool solid)
+int TilesCount;
+
+void compile_tiles(map<int, int>& bindings, string root_path, string tiles_path, bool solid, int offset)
 {
-    string tiles_name = tiles_path.substr(0, tiles_path.size()-6);
+    string tiles_name = tiles_path.substr(0, tiles_path.size()-4);
     printf(".. %s\n", tiles_path.c_str());
     
     FILE* bitmap = fopen((root_path+tiles_path).c_str(), "rb");
@@ -230,7 +232,7 @@ void compile_tiles(map<int, int>& bindings, string root_path, string tiles_path,
         
         bindings[-1] = 0;
         int tiles_count = 0;
-        int tiles_address = 0x10;   // TODO: auto process this
+        int tiles_address = offset;   // TODO: auto process this
 
         for (int y=0 ; y<h ; ++y)
         for (int x=0 ; x<w ; ++x)
@@ -263,6 +265,8 @@ void compile_tiles(map<int, int>& bindings, string root_path, string tiles_path,
         }
         fprintf(data_file_c, "0};\n");
 
+        TilesCount = tiles_count;
+
         if (!solid)
             fprintf(data_file_c, "const TileSet %s_tiles = {0, %d, %s_tiles_data};\n", tiles_name.c_str(), tiles_count, tiles_name.c_str());    
         free(data);
@@ -270,14 +274,14 @@ void compile_tiles(map<int, int>& bindings, string root_path, string tiles_path,
     fclose(bitmap);
 }
 
-void compile_data(string root_path, string map_path, map<int, int>* solid_bindings=NULL)
+void compile_data(string root_path, string map_path, map<int, int>* solid_bindings, int offset)
 {
     printf(".. %s\n", map_path.c_str());
     string map_name = map_path.substr(0, map_path.size()-4);
     
     map<int, int> graphics_bindings;
     map<int, int>& bindings = graphics_bindings;
-    if (solid_bindings==NULL) compile_tiles(bindings, root_path, map_name+".tiles", false);
+    if (solid_bindings==NULL) compile_tiles(bindings, root_path, map_name+".bmp", false, offset);
     else bindings = *solid_bindings;
 
     fprintf(data_file_c, "const u16 %s[] = {", map_name.c_str());
@@ -300,10 +304,10 @@ void compile_data(string root_path, string map_path, map<int, int>* solid_bindin
     fprintf(data_file_c, "0};\n\n");
 }
 
-void compile_plane(string root_path, string map_name, map<int, int>& solid_bindings)
+void compile_plane(string root_path, string map_name, map<int, int>& solid_bindings, int offset)
 {
-    compile_data(root_path, map_name+"_solid.csv", &solid_bindings);
-    compile_data(root_path, map_name+"_graphics.csv");
+    compile_data(root_path, map_name+"_solid.csv", &solid_bindings, 0);
+    compile_data(root_path, map_name+"_graphics.csv", NULL, offset);
 
     fprintf(data_file_c, "smePlane %s = {\n", map_name.c_str());
     fprintf(data_file_c, "    %s_solid,\n", map_name.c_str());
@@ -336,11 +340,11 @@ void compile_map(string root_path, string map_path)
     // Physics
 
     map<int, int> solid_bindings;
-    compile_tiles(solid_bindings, root_path, map_name+"_solid.tiles", true);
+    compile_tiles(solid_bindings, root_path, map_name+"_solid.bmp", true, 0);
 
     // Planes
-    compile_plane(root_path, map_name+"_plan_a", solid_bindings);
-    compile_plane(root_path, map_name+"_plan_b", solid_bindings);
+    compile_plane(root_path, map_name+"_plan_a", solid_bindings, 0x10);
+    compile_plane(root_path, map_name+"_plan_b", solid_bindings, 0x10+TilesCount);
     
     // Write it
     fprintf(data_file_c, "smeMap %s = {\n", map_name.c_str());
@@ -365,32 +369,39 @@ int main(int argc, char* argv[])
     data_file_c = fopen((root_path+"data.c").c_str(), "wt");
     fprintf(data_file_c, "#include \"data.h\"\n\n");
 
+    /*
     // Bitmaps
-    WIN32_FIND_DATA find_data;
-    HANDLE handle = FindFirstFile((root_path+"*.bmp").c_str(), &find_data);
-    if (handle!=INVALID_HANDLE_VALUE)
     {
-        do
+        WIN32_FIND_DATA find_data;
+        HANDLE handle = FindFirstFile((root_path+"*.bmp").c_str(), &find_data);
+        if (handle!=INVALID_HANDLE_VALUE)
         {
-            if (!(find_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
-                compile_bitmap(root_path, find_data.cFileName);
+            do
+            {
+                if (!(find_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
+                    compile_bitmap(root_path, find_data.cFileName);
+            }
+            while (FindNextFile(handle, &find_data)!=0);
         }
-        while (FindNextFile(handle, &find_data)!=0);
+        FindClose(handle);
     }
-    FindClose(handle);
+*/
 
     // Maps
-    handle = FindFirstFile((root_path+"*.tmx").c_str(), &find_data);
-    if (handle!=INVALID_HANDLE_VALUE)
     {
-        do
+        WIN32_FIND_DATA find_data;
+        HANDLE handle = FindFirstFile((root_path+"*.tmx").c_str(), &find_data);
+        if (handle!=INVALID_HANDLE_VALUE)
         {
-            if (!(find_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
-                compile_map(root_path, find_data.cFileName);
+            do
+            {
+                if (!(find_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
+                    compile_map(root_path, find_data.cFileName);
+            }
+            while (FindNextFile(handle, &find_data)!=0);
         }
-        while (FindNextFile(handle, &find_data)!=0);
+        FindClose(handle);
     }
-    FindClose(handle);
 
     fprintf(data_file_h, "\n#endif\n");
     fclose(data_file_h);
