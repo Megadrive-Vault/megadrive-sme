@@ -5,8 +5,8 @@
 
 typedef struct
 {
-    const u8* Physics;
-    const u8* Graphics;
+    const u16* Physics;
+    const u16* Graphics;
     const u16* Palette;
     TileSet* Tiles;
     Map* Data;

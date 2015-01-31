@@ -63,13 +63,12 @@ int main(u16 hard)
         float vec_x = sin(roll)*speed;
         float vec_y = -cos(roll)*speed;
         
-        
-        /*int censor = map_plan_a[smeMOD((int)((position_y+vec_y)/8.0f), MAP_HEIGHT)*MAP_WIDTH+smeMOD((int)((position_x+vec_x)/8.0f), MAP_WIDTH)];
-        if (censor==0)
+        int censor = city.PlaneA->Physics[smeMOD((int)((position_y+vec_y)/8.0f), city.Height)*city.Width+smeMOD((int)((position_x+vec_x)/8.0f), city.Width)];
+        if (censor!=0)
         {
             vec_x = 0.0f;
             vec_y = 0.0f;
-        }*/
+        }
         
         position_x += vec_x;
         position_y += vec_y;
