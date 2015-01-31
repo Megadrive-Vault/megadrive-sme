@@ -36,27 +36,16 @@ int main(u16 hard)
     
     SPR_init(256);
     SPR_initSprite(&sprites[0], &truck, 0, 0, TILE_ATTR(PAL2, 0, FALSE, FALSE));
-    VDP_setPalette(1, truck.palette->data);
-    
-    //VDP_setPalette(0, map_plan_a_palette);
-    //VDP_loadTileSet(&map_plan_a_tiles, TILE_USERINDEX, 0);
-    
-    // Plan_a.compression = 0;
-    // Plan_a.w = MAP_WIDTH;
-    // Plan_a.h = MAP_HEIGHT;
-    // Plan_a.tilemap = map_plan_a;
-    
-    // Plan_b.compression = 0;
-    // Plan_b.w = MAP_WIDTH;
-    // Plan_b.h = MAP_HEIGHT;
-    // Plan_b.tilemap = map_plan_b;
+    VDP_setPalette(2, truck.palette->data);
+
+    smeMAP_Load(&city);
     
     VDP_setScrollingMode(HSCROLL_PLANE, VSCROLL_PLANE);
     
     camera_position_x = position_x;
     camera_position_y = position_y;
     
-    //update((int)(camera_position_x/8-screenWidth/16-VIEWPORT_BORDER), (int)(camera_position_y/8-screenHeight/16-VIEWPORT_BORDER), VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
+    smeMAP_Update(&city, (int)(camera_position_x/8-screenWidth/16-VIEWPORT_BORDER), (int)(camera_position_y/8-screenHeight/16-VIEWPORT_BORDER), VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
     
     SYS_setVIntCallback(vblank);
     
@@ -86,8 +75,8 @@ int main(u16 hard)
         position_y += vec_y;
         
         int sp = (int)(roll*ANIM_ANGLES/PI);
-        if (sp<0) { SPR_setAttribut(&sprites[0], TILE_ATTR(PAL1, 0, FALSE, TRUE)); sp = -sp; }
-        else SPR_setAttribut(&sprites[0], TILE_ATTR(PAL1, 0, FALSE, FALSE));
+        if (sp<0) { SPR_setAttribut(&sprites[0], TILE_ATTR(PAL2, 0, FALSE, TRUE)); sp = -sp; }
+        else SPR_setAttribut(&sprites[0], TILE_ATTR(PAL2, 0, FALSE, FALSE));
         SPR_setAnim(&sprites[0], sp);
         
         
@@ -107,16 +96,18 @@ int main(u16 hard)
         int px = place_x-screenWidth/16-VIEWPORT_BORDER;
         int py = place_y-screenHeight/16-VIEWPORT_BORDER;
         
-        /*if (place_x>old_place_x)
-            update(px+VIEWPORT_WIDTH-1, py, VIEWPORT_BORDER, VIEWPORT_HEIGHT);
+        if (place_x>old_place_x)
+            smeMAP_Update(&city, px+VIEWPORT_WIDTH-1, py, VIEWPORT_BORDER, VIEWPORT_HEIGHT);
         else if (place_x<old_place_x)
-            update(px, py, VIEWPORT_BORDER, VIEWPORT_HEIGHT);
+            smeMAP_Update(&city, px, py, VIEWPORT_BORDER, VIEWPORT_HEIGHT);
         
         if (place_y>old_place_y)
-            update(px, py+VIEWPORT_HEIGHT-1, VIEWPORT_WIDTH, VIEWPORT_BORDER);
+            smeMAP_Update(&city, px, py+VIEWPORT_HEIGHT-1, VIEWPORT_WIDTH, VIEWPORT_BORDER);
         else if (place_y<old_place_y)
-            update(px, py, VIEWPORT_WIDTH, VIEWPORT_BORDER);*/
+            smeMAP_Update(&city, px, py, VIEWPORT_WIDTH, VIEWPORT_BORDER);
     }
+    
+    smeMAP_Unload(&city);
     
     sme_Finalize();    
     return 0;
