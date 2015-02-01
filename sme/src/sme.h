@@ -6,6 +6,8 @@
 #include "sme_sound.h"
 #include "sme_bitmap.h"
 #include "sme_map.h"
+#include "sme_camera.h"
+#include "sme_world.h"
 
 void sme_Initialize(u16 hard);
 void sme_Finalize();

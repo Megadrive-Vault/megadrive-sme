@@ -31,7 +31,7 @@ void smeMAP_Unload(smeMap* map)
     map->PlaneA->Tiles = NULL;
 }
 
-void smeMAP_Update(smeMap* map, int x, int y, int w, int h)
+void smeMAP_Render(smeMap* map, int x, int y, int w, int h)
 {
     int mx = smeMOD(x, map->Width);
     int my = smeMOD(y, map->Height);

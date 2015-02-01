@@ -23,6 +23,6 @@ typedef struct
 
 void smeMAP_Load(smeMap* map);
 void smeMAP_Unload(smeMap* map);
-void smeMAP_Update(smeMap* map, int x, int y, int w, int h);
+void smeMAP_Render(smeMap* map, int x, int y, int w, int h);
 
 #endif
