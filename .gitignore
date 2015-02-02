@@ -4,8 +4,9 @@ sme/lib/
 *.vcproj.*.*.user
 *.ncb
 *.suo
+*.pdb
+*.ilk
 compiler/tmp/
-compiler/bin/
 game/data/data.c
 game/data/data.h
 game/res/resources.h
