@@ -13,7 +13,8 @@ typedef struct
     int ViewportBorder;
 } smeCamera;
 
-void smeCAMERA_Initialize(smeCamera* camera, smeMap* map, float position_x, float position_y);
+smeCamera* smeCAMERA_Create(smeMap* map, float position_x, float position_y);
+void smeCAMERA_Destroy(smeCamera* camera);
 void smeCAMERA_Update(smeCamera* camera, smeMap* map, float position_x, float position_y, float smooth);
 void smeCAMERA_UpdateScrolling();
 

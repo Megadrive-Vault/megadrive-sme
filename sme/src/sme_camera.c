@@ -3,8 +3,9 @@
 
 smeCamera* _Camera = NULL;
 
-void smeCAMERA_Initialize(smeCamera* camera, smeMap* map, float position_x, float position_y)
+smeCamera* smeCAMERA_Create(smeMap* map, float position_x, float position_y)
 {
+    smeCamera* camera = (smeCamera*)MEM_alloc(sizeof(smeCamera));
     camera->ViewportBorder = 2;
     camera->ViewportWidth = screenWidth/8+camera->ViewportBorder*2;
     camera->ViewportHeight = screenHeight/8+camera->ViewportBorder*2;
@@ -16,6 +17,13 @@ void smeCAMERA_Initialize(smeCamera* camera, smeMap* map, float position_x, floa
         camera->ViewportWidth, camera->ViewportHeight);
         
     _Camera = camera;
+    return camera;
+}
+
+void smeCAMERA_Destroy(smeCamera* camera)
+{
+    MEM_free(camera);
+    _Camera = NULL;
 }
 
 void smeCAMERA_Update(smeCamera* camera, smeMap* map, float position_x, float position_y, float smooth)

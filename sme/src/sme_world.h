@@ -6,8 +6,14 @@
 
 typedef struct
 {
-    smeCamera Camera;
+    smeCamera* Camera;
+    smeMap* Map;
 } smeWorld;
 
+smeWorld* smeWORLD_Create();
+void smeWORLD_Destroy(smeWorld* world);
+void smeWORLD_LoadMap(smeWorld* world, smeMap* map, float position_x, float position_y);
+void smeWORLD_UnloadMap(smeWorld* world);
+void smeWORLD_Update(smeWorld* world, float position_x, float position_y, float smooth);
 
 #endif
